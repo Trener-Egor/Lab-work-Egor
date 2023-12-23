@@ -1,0 +1,172 @@
+﻿#include <iostream>
+#include<list>
+#include<vector>
+struct Node {
+	int data;
+	Node* next;
+	Node* prev;
+};
+
+class LinkedList {
+public:
+	LinkedList(int data);
+	LinkedList(std::vector<int> data);
+	bool add_element(int data);
+	void print_list();
+	bool find_element(int data);
+	bool insert(int data, int position);
+	bool delete_element(int data);
+	~LinkedList();
+private:
+	Node* first;
+	Node* last;
+};
+
+LinkedList::LinkedList(int data) {
+	Node* nd = new Node{ data,nullptr,nullptr };
+	first = nd;
+	last = nd;
+	first->prev = nullptr;
+	last->next = nullptr;
+}
+
+bool LinkedList::add_element(int data) {
+	Node* nd = new Node{ data,nullptr,nullptr };
+	if (last == nullptr) {
+		first = nd;
+		last = nd;
+		return true;
+	}
+	if ((first == last) && (last != nullptr)) {
+		first->next = nd;
+		last = nd;
+		last->prev = first;
+		last->next = nullptr;
+		return true;
+	}
+	last->next = nd;
+	last = nd;
+	return true;
+}
+
+bool LinkedList::find_element(int data) {
+	Node* current = first;
+	while (current != nullptr) {
+		if (current->data == data) {
+			return true;
+		}
+		current = current->next;
+	}
+	return false;
+}
+
+bool LinkedList::insert(int data, int position) {
+	if (position == 0) {
+		if (last == nullptr) {
+			Node* nd = new Node{ data,nullptr,nullptr };
+			first = nd;
+			last = nd;
+			return true;
+		}
+		Node* nd = new Node{ data,first,nullptr };
+		first->prev = nd;
+		first = nd;
+		return true;
+	}
+	Node* current = first;
+	int pos = 0;
+	while (current != nullptr) {
+		if ((current->next == nullptr) && (position == pos)) {
+			Node* nd = new Node{ data,nullptr,nullptr };
+			current->next = nd;
+			nd->prev = last;
+			last = nd;
+			return true;
+		}
+		if (pos == position - 1) {
+			Node* nd = new Node{ data, current->next,nullptr };
+			current->next = nd;
+			nd->next = current->next->next;
+			current->next->next->prev = current;
+			return true;
+		}
+		++pos;
+		current = current->next;
+	}
+}
+
+bool LinkedList::delete_element(int data) {
+	int flog = 0;
+	if (first->data == data) {
+		Node* del = first;
+		first = first->next;
+		first->prev = nullptr;
+		delete(del);
+		flog = 1;
+	}
+	Node* current = first;
+	while (current->next != nullptr) {
+		if (current->next->data == data) {
+			Node* del = current->next;
+			current->next = current->next->next;
+			if (del == last) {
+				last = current;
+				last->next = nullptr;
+				delete(del);
+				flog = 1;
+			}
+			else {
+				delete(del);
+				current->next->prev = current;
+				flog = 1;
+			}
+		}
+		else {
+			current = current->next;
+		}
+	}
+	if (flog == 1) {
+		return true;
+	}
+	return false;
+
+}
+
+LinkedList::LinkedList(std::vector<int> data) {
+	for (int i = 0; i < data.size(); ++i) {
+		add_element(data[i]);
+	}
+}
+
+void LinkedList::print_list() {
+	Node* nd = first;
+	while (nd != nullptr) {
+		std::cout << nd->data << ' ';;
+		nd = nd->next;
+	}
+	std::cout << std::endl;
+}
+
+LinkedList::~LinkedList() {
+	Node* current = first;
+	while (current != nullptr) {
+		Node* next = current->next;
+		delete current;
+		current = next;
+	}
+}
+
+int main()
+{
+	std::vector<int> vec = { 56, 23, 67, 92, 34, 23 };
+	LinkedList lst(vec);
+	lst.add_element(88);
+	lst.insert(5,4);
+	lst.print_list();
+	lst.delete_element(23);
+	lst.print_list();
+	if (lst.find_element(34)) {
+		std::cout << "yes" << std::endl;
+	}
+	else { std::cout << "no" << std::endl; }
+}
