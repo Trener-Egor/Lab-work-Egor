@@ -1,0 +1,165 @@
+﻿#include <iostream>
+#include <stack>
+#include<vector>
+#include<string>
+#include<cmath>
+
+struct Elem {
+    int type;
+    double num;
+    char str;
+};
+
+std::vector<Elem> ReversePolishNotation(const std::vector<Elem>& elems) {
+    std::stack <Elem> stack;
+    std::vector <Elem> answer;
+    for (int i = 0; i < elems.size(); ++i) {
+        if (elems[i].type == 1) {
+            answer.push_back(elems[i]);
+        }
+        else {
+            if (elems[i].str == '+' || elems[i].str == '-') {
+                while (!stack.empty() && stack.top().str != '(') {
+                    answer.push_back(stack.top());
+                    stack.pop();
+                }
+                stack.push(elems[i]);
+            }
+            if (elems[i].str == '*' || elems[i].str == '/') {
+                while (!stack.empty() && stack.top().str != '+' && stack.top().str != '-' && stack.top().str != '(') {
+                    answer.push_back(stack.top());
+                    stack.pop();
+                }
+                stack.push(elems[i]);
+            }
+            if (elems[i].str == '(') {
+                stack.push(elems[i]);
+            }
+            if (elems[i].str == ')') {
+                while (stack.top().str != '(') {
+                    answer.push_back(stack.top());
+                    stack.pop();
+                }
+                stack.pop();
+            }
+            if (elems[i].str == '^') {
+                stack.push(elems[i]);
+            }
+        }
+    }
+    while (!stack.empty()) {
+        answer.push_back(stack.top());
+        stack.pop();
+    }
+    return answer;
+}
+double Calculate(const std::vector<Elem>& elems) {
+    std::stack<double> stack;
+    for (int i = 0; i < elems.size(); ++i) {
+        if (elems[i].type == 1) {
+            stack.push(elems[i].num);
+        }
+        else {
+            double right = stack.top();
+            stack.pop();
+            double left = stack.top();
+            stack.pop();
+            if (elems[i].str == '+') {
+                double result = left + right;
+                stack.push(result);
+            }
+            if (elems[i].str == '-') {
+                double result = left - right;
+                stack.push(result);
+            }
+            if (elems[i].str == '*') {
+                double result = left * right;
+                stack.push(result);
+            }
+            if (elems[i].str == '/') {
+                double result = left / right;
+                stack.push(result);
+            }
+            if (elems[i].str == '^') {
+                double result = std::pow(left,right);
+                stack.push(result);
+            }
+        }
+    }
+    return stack.top();
+}
+std::vector <Elem> Convert(const std::string& str) {
+    std::vector<Elem>answer;
+    bool lastdigit=false;
+    bool negative = false;
+    for (int i = 0; i < str.size(); ++i) {
+        if (str[i] >= '0' && str[i] <= '9') {
+            double sum = 0;
+            while (str[i] >= '0' && str[i] <= '9') {
+                sum *= 10;
+                sum += str[i] - '0';
+                ++i;
+            }
+            if (i < str.size() && str[i] == '.') {
+                double add=0;
+                double count=0;
+                ++i;
+                while (str[i] >= '0' && str[i] <= '9') {
+                    add *= 10;
+                    add += str[i] - '0';
+                    ++count;
+                    ++i;
+                }
+                sum+= add / pow(10, count);
+             }
+            --i;
+            if (negative) {
+                sum *= -1;
+                negative = false;
+            }
+            answer.push_back({ 1,sum,'0' });
+            lastdigit = true;
+        }
+        else if (str[i] == '-') {
+            if (lastdigit) {
+                answer.push_back({ 2,0,str[i] });
+                lastdigit = false;
+            }
+            else {
+                negative = true;
+            }
+        }
+        else if (str[i] == '+') {
+            if (lastdigit) {
+                answer.push_back({ 2,0,str[i] });
+                lastdigit = false;
+            }
+        }
+        else if (str[i] == ')') {
+            answer.push_back({ 2,0,str[i] });
+            lastdigit = true;
+        }
+        else if(str[i]=='(') {
+            if (negative) {
+                answer.push_back({ 1,-1,'0' });
+                answer.push_back({ 2,0,'*' });
+                negative = false;
+            }
+            answer.push_back({ 2,0,str[i] });
+            lastdigit =false;
+        }
+        else {
+            answer.push_back({ 2,0,str[i] });
+            lastdigit = false;
+        }
+    }
+    return answer;
+}
+int main()
+{
+    std::string str;
+    std::getline(std::cin, str);
+    std::vector<Elem> notation = Convert(str);
+    std::vector<Elem> RPN = ReversePolishNotation(notation);
+    std::cout << Calculate(RPN);
+}
